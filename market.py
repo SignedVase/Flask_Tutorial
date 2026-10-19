@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy_lite import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String
+from sqlalchemy import String, select
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_ENGINES"] = {"default" : "sqlite:///db.sqlite3"}
@@ -20,6 +20,9 @@ class Item(Base):
     description: Mapped[str] = mapped_column(String(1024), unique=True)
     price: Mapped[int]
 
+    def __repr__(self) -> str:
+        return f"Item {self.name}"
+
 
 @app.route("/")
 @app.route("/home")
@@ -28,9 +31,6 @@ def home_page():
 
 @app.route("/market")
 def market_page():
-    items = [
-        {'id': 1, 'name': 'Phone', 'barcode': '893212299897', 'price': 500},
-        {'id': 2, 'name': 'Laptop', 'barcode': '123985473165', 'price': 900},
-        {'id': 3, 'name': 'Keyboard', 'barcode': '231985128446', 'price': 150}
-    ]
+    query = select(Item)
+    items = db.session.scalars(query).all()
     return render_template("market.html", items=items)
